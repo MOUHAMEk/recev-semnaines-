@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affichage des Travaux</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e9ecef;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            font-size: 26px;
+            background-color: #007bff;
+            color: white;
+            padding: 15px;
+            text-transform: uppercase;
+            width: 100%;
+        }
+
+        main {
+            margin-top: 20px;
+            text-align: center;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        select, button {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ced4da;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .work-details {
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .work-details h2 {
+            font-size: 20px;
+        }
+
+        .work-details p {
+            margin: 5px 0;
+        }
+
+        footer {
+            text-align: center;
+            font-size: 18px;
+            background-color: #0056b3;
+            color: white;
+            padding: 15px;
+            width: 100%;
+            margin-top: 40px;
+            text-transform: uppercase;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Affichage des Travaux</h1>
+    </header>
+
+    <main>
+        <div class="week-selection">
+            <label for="weekDropdown">Sélectionnez une semaine:</label>
+            <select id="weekDropdown">
+                <option value="" disabled selected>Choisir une semaine...</option>
+                <!-- Weeks will be populated here -->
+            </select>
+        </div>
+
+        <button id="showWeekBtn">Afficher les Données</button>
+
+        <div id="workDetails" class="work-details" style="display:none;">
+            <!-- Work details will be displayed here -->
+        </div>
+    </main>
+
+    <footer>
+        MArisk
+    </footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCOA0a_rjXqY99KXyyuHEiPOJDGGapZQUo",
+            authDomain: "suivi-49954.firebaseapp.com",
+            databaseURL: "https://suivi-49954-default-rtdb.firebaseio.com",
+            projectId: "suivi-49954",
+            storageBucket: "suivi-49954.appspot.com",
+            messagingSenderId: "141836603566",
+            appId: "1:141836603566:web:aaff934468238d958cdd3f",
+            measurementId: "G-3CMYEPPYK8"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        const weekDropdown = document.getElementById("weekDropdown");
+
+        const weeks = [
+            "Semaine 1 septembre", "Semaine 2 septembre", "Semaine 3 septembre", "Semaine 4 septembre",
+            "Semaine 1 octobre", "Semaine 2 octobre", "Semaine 3 octobre", "Semaine 4 octobre"
+        ];
+        weeks.forEach(week => {
+            const option = document.createElement("option");
+            option.value = week;
+            option.textContent = week;
+            weekDropdown.appendChild(option);
+        });
+
+        document.getElementById('showWeekBtn').addEventListener('click', async function() {
+            const selectedWeek = weekDropdown.value;
+            if (selectedWeek) {
+                const workRef = ref(db, 'travaux/' + selectedWeek);
+                const snapshot = await get(workRef);
+
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    displayWorkDetails(data);
+                } else {
+                    alert("Aucune donnée trouvée pour la semaine sélectionnée.");
+                }
+            } else {
+                alert("Veuillez sélectionner une semaine.");
+            }
+        });
+
+        function displayWorkDetails(data) {
+            const workDetailsDiv = document.getElementById('workDetails');
+            workDetailsDiv.innerHTML = `
+                <h2>Détails des Travaux pour ${data.semaine}</h2>
+                <h3>Poteaux</h3>
+                <p>Ferraillé: ${data.poteaux.ferraille}</p>
+                <p>Coffré: ${data.poteaux.coffre}</p>
+                <p>Coulé: ${data.poteaux.coule}</p>
+
+                <h3>Poutres</h3>
+                <p>Ferraillé: ${data.poutres.ferraille}</p>
+                <p>Coffré: ${data.poutres.coeuvre}</p>
+                <p>Coulé: ${data.poutres.coule}</p>
+
+                <h3>Plancher</h3>
+                <p>Coffré: ${data.plancher.coffre} m²</p>
+                <p>Ferraillé: ${data.plancher.ferraille} m²</p>
+                <p>Coulé: ${data.plancher.coule} m²</p>
+
+                <h3>Ascenseurs</h3>
+                <p>Ascenseur 1 - Ferraillé: ${data.ascenseurs.ascenseur1.ferraille}</p>
+                <p>Ascenseur 1 - Coffré: ${data.ascenseurs.ascenseur1.coffre}</p>
+                <p>Ascenseur 1 - Coulé: ${data.ascenseurs.ascenseur1.coule}</p>
+                <p>Ascenseur 2 - Ferraillé: ${data.ascenseurs.ascenseur2.ferraille}</p>
+                <p>Ascenseur 2 - Coffré: ${data.ascenseurs.ascenseur2.coffre}</p>
+                <p>Ascenseur 2 - Coulé: ${data.ascenseurs.ascenseur2.coule}</p>
+
+                <h3>Escaliers</h3>
+                <p>Escalier 1 - Ferraillé: ${data.escaliers.escalier1.ferraille}</p>
+                <p>Escalier 1 - Coffré: ${data.escaliers.escalier1.coffre}</p>
+                <p>Escalier 1 - Coulé: ${data.escaliers.escalier1.coule}</p>
+                <p>Escalier 2 - Ferraillé: ${data.escaliers.escalier2.ferraille}</p>
+                <p>Escalier 2 - Coffré: ${data.escaliers.escalier2.coffre}</p>
+                <p>Escalier 2 - Coulé: ${data.escaliers.escalier2.coule}</p>
+
+                <h3>Commentaires</h3>
+                <p>${data.commentaires}</p>
+            `;
+            workDetailsDiv.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
